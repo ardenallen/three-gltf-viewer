@@ -1,24 +1,20 @@
 var express = require('express');
+var path = require('path');
 var app = express();
 var http = require('http').createServer(app);
+var io = require('socket.io')(http);
 
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
+var port = process.env.PORT || 3000;
+
+app.use(express.static(path.join(__dirname, 'dist')));
+
+io.on('connection', (socket) => {
+    console.log('a user connected');
+    socket.on('disconnect', () => {
+        console.log('user disconnected');
+    });
 });
 
-http.listen(3000, () => {
-    console.log('listening on *:3000');
+http.listen(port, () => {
+    console.log(`App listening on port ${port}`)
 });
-
-// const express = require('express');
-// const path = require('path');
-//
-// const app = express();
-//
-// const port = process.env.PORT || 3000;
-//
-// app.use(express.static(path.join(__dirname, 'dist')));
-//
-// app.listen(port, () => {
-//     console.log(`App listening on port ${port}`)
-// });

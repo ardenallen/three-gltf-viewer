@@ -30,7 +30,7 @@ import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 
 import { GUI } from 'dat.gui';
 
-import { environments } from '../assets/environment/index.js';
+import { environments } from '../assets/environment';
 import { createBackground } from '../lib/three-vignette.js';
 
 const DEFAULT_CAMERA = '[default]';

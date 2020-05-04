@@ -7,11 +7,8 @@
   "scripts": {
     "start": "node index.js",
     "prestart": "parcel build index.html",
-    "build:registry": "curl https://rawgit.com/KhronosGroup/glTF-Generator-Registry/master/registry.json -o lib/gltf-generator-registry.json",
     "dev": "parcel index.html --port 3000",
-    "test": "node scripts/gen_test.js",
-    "deploy": "npm run build && now dist --local-config now.json --prod",
-    "postversion": "git push && git push --tags"
+    "test": "node scripts/gen_test.js"
   },
   "keywords": [
     "gltf",
@@ -36,6 +33,7 @@
     "query-string": "^4.3.4",
     "simple-dropzone": "^0.7.0",
     "socket.io": "^2.3.0",
+    "socket.io-client": "^2.3.0",
     "three": "^0.112.0"
   },
   "devDependencies": {

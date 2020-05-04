@@ -3,12 +3,14 @@ import { Viewer } from './viewer.js';
 import { SimpleDropzone } from 'simple-dropzone';
 import { ValidationController } from './validation-controller.js';
 import queryString from 'query-string';
+import io from 'socket.io-client';
 
 if (!(window.File && window.FileReader && window.FileList && window.Blob)) {
   console.error('The File APIs are not fully supported in this browser.');
 } else if (!WEBGL.isWebGLAvailable()) {
   console.error('WebGL is not supported in this browser.');
 }
+
 
 class App {
 
@@ -17,6 +19,8 @@ class App {
    * @param  {Location} location
    */
   constructor (el, location) {
+
+    const socket = io();
 
     const hash = location.hash ? queryString.parse(location.hash) : {};
     this.options = {
