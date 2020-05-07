@@ -33,6 +33,8 @@ import { GUI } from 'dat.gui';
 import { environments } from '../assets/environment';
 import { createBackground } from '../lib/three-vignette.js';
 
+// import io from 'socket.io-client';
+
 const DEFAULT_CAMERA = '[default]';
 
 const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
@@ -56,7 +58,8 @@ Cache.enabled = true;
 
 export class Viewer {
 
-  constructor (el, options) {
+  constructor (el, options, socket) {
+    this.socket = socket;
     this.el = el;
     this.options = options;
 
@@ -150,9 +153,12 @@ export class Viewer {
   }
 
   animate (time) {
-
     requestAnimationFrame( this.animate );
-
+    this.socket.emit('ready');
+    this.socket.on('news', (data) => {
+          //console.log(data);
+        }
+    );
     const dt = (time - this.prevTime) / 1000;
 
     this.controls.update();
@@ -221,9 +227,9 @@ export class Viewer {
       const loader = new GLTFLoader(manager);
       loader.setCrossOrigin('anonymous');
 
-      const dracoLoader = new DRACOLoader();
-      dracoLoader.setDecoderPath( 'assets/draco/' );
-      loader.setDRACOLoader( dracoLoader );
+      // const dracoLoader = new DRACOLoader();
+      // dracoLoader.setDecoderPath( 'assets/draco/' );
+      // loader.setDRACOLoader( dracoLoader );
 
       const blobURLs = [];
 
@@ -325,7 +331,7 @@ export class Viewer {
     this.updateTextureEncoding();
     this.updateDisplay();
 
-    window.content = this.content;
+    // window.content = this.content;
     console.info('[glTF Viewer] THREE.Scene exported as `window.content`.');
     this.printGraph(this.content);
 
