@@ -6,7 +6,12 @@ var express = require('express');
 var path = require('path');
 var app = express();
 var http = require('http').createServer(app);
-var io = require('socket.io')(http);
+var io = require('socket.io')(http,
+    {
+        pingInterval: 25000,
+        pingTimeout: 60000
+    });
+//var io = require('socket.io')(http);
 
 var port = process.env.PORT || 3000;
 
@@ -44,7 +49,7 @@ loader.parse( trimBuffer( fullBody ), '', ( gltf ) => {
 loader.parse( trimBuffer( lowerBody ), '', ( gltf ) => {
 
     lowerBodyAnim_read = gltf.animations[0];
-    console.log(lowerBodyAnim_read);
+    //console.log(lowerBodyAnim_read);
 
 }, ( e ) => {
 
@@ -59,16 +64,17 @@ io.on('connection', (socket) => {
     });
     socket.on('readyToStream', () => {
         console.log("READY");
-        lowerBodyAnim = lowerBodyAnim_read.clone();
+        lowerBodyAnim = fullBodyAnim.clone();
         setInterval(() => {
             if (prevKey.time != null) {
                 socket.emit('keyframe', prevKey);
             }
             generateKeyframe();}
-            , 20);
+            , 10);
     });
-    socket.on('disconnect', () => {
+    socket.on('disconnect', (reason) => {
         console.log('user disconnected');
+        console.log(`reason: ${reason}`);
     });
 });
 

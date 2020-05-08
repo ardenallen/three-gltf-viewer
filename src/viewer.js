@@ -60,7 +60,7 @@ export class Viewer {
   constructor (el, options, socket) {
     this.socket = socket;
     this.socket.on('keyframe', (data) => {
-          console.log(data);
+          // console.log(data);
           this.processKeyframe(data);
         }
     );
@@ -98,6 +98,7 @@ export class Viewer {
     };
 
     this.prevTime = 0;
+    this.buf = 1;
 
     this.stats = new Stats();
     this.stats.dom.height = '48px';
@@ -172,7 +173,18 @@ export class Viewer {
         track.values = values;
       }
     }
-    this.clips[0].resetDuration();
+    this.clips[0].duration = time;
+    if (time > 0) {
+      let action = this.mixer.clipAction(this.clips[0]);
+      time = action.time;
+      var paused = action.paused;
+      this.mixer.uncacheAction(this.clips[0])
+      action = this.mixer.clipAction(this.clips[0])
+      action.time = time;
+      action.paused = paused;
+      action.play();
+    }
+
   }
 
   animate (time) {
@@ -180,15 +192,16 @@ export class Viewer {
 
     const dt = (time - this.prevTime) / 1000;
     if (this.mixer && this.clips.length) {
-      //var action = this.mixer.existingAction(this.clips[0]);
-      // action.paused = false;
-      // action.play();
-      // if ((action.time + dt) > action.getClip().duration) {
-      //   action.paused = true;
-      // } else {
-      //   action.paused = false;
-      //   action.play();
-      // }
+      let action = this.mixer.clipAction(this.clips[0]);
+      let clip = action.getClip();
+      if ((action.time + dt + this.buf) > clip.duration) {
+        action.paused = true;
+        this.buf = 1;
+      } else {
+        action.paused = false;
+        action.play();
+        this.buf = 0;
+      }
     }
     this.controls.update();
     this.stats.update();
@@ -390,7 +403,7 @@ export class Viewer {
           this.updateGUI();
           this.socket.emit('readyToStream');
           this.mixer.uncacheClip(this.clips[0]);
-          this.mixer.uncacheAction(this.clips[0]);
+          //this.mixer.uncacheAction(this.clips[0]);
       });
       return;
     }
@@ -399,7 +412,9 @@ export class Viewer {
 
   playAllClips () {
     this.clips.forEach((clip) => {
+      this.mixer.uncacheClip(clip);
       this.mixer.clipAction(clip).reset().play();
+      console.log(this.mixer.clipAction(clip));
       this.state.actionStates[clip.name] = true;
     });
   }
