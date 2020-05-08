@@ -1,4 +1,5 @@
 import {
+  THREE,
   AmbientLight,
   AnimationMixer,
   AxesHelper,
@@ -19,21 +20,19 @@ import {
   UnsignedByteType,
   Vector3,
   WebGLRenderer,
-  sRGBEncoding,
+  sRGBEncoding, AnimationClip, AnimationActionLoopStyles
 } from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 // import { RoughnessMipmapper } from 'three/examples/jsm/utils/RoughnessMipmapper.js';
 
 import { GUI } from 'dat.gui';
+// import THREE from 'three';
 
 import { environments } from '../assets/environment';
 import { createBackground } from '../lib/three-vignette.js';
-
-// import io from 'socket.io-client';
 
 const DEFAULT_CAMERA = '[default]';
 
@@ -60,6 +59,11 @@ export class Viewer {
 
   constructor (el, options, socket) {
     this.socket = socket;
+    this.socket.on('keyframe', (data) => {
+          console.log(data);
+          this.processKeyframe(data);
+        }
+    );
     this.el = el;
     this.options = options;
 
@@ -152,15 +156,40 @@ export class Viewer {
     window.addEventListener('resize', this.resize.bind(this), false);
   }
 
+  processKeyframe (keyframe) {
+    var time = keyframe.time;
+    let times, values;
+    for (var track of this.clips[0].tracks) {
+      var val = keyframe.joints.find(({ name }) => name === track.name);
+      if (val != undefined) {
+        times = Array.from(track.times.values());
+        if (time != 0) {
+          times.push(time);
+        }
+        track.times = times;
+        values = Array.from(track.values.values());
+        values.push.apply(values, val.value);
+        track.values = values;
+      }
+    }
+    this.clips[0].resetDuration();
+  }
+
   animate (time) {
     requestAnimationFrame( this.animate );
-    this.socket.emit('ready');
-    this.socket.on('news', (data) => {
-          //console.log(data);
-        }
-    );
-    const dt = (time - this.prevTime) / 1000;
 
+    const dt = (time - this.prevTime) / 1000;
+    if (this.mixer && this.clips.length) {
+      //var action = this.mixer.existingAction(this.clips[0]);
+      // action.paused = false;
+      // action.play();
+      // if ((action.time + dt) > action.getClip().duration) {
+      //   action.paused = true;
+      // } else {
+      //   action.paused = false;
+      //   action.play();
+      // }
+    }
     this.controls.update();
     this.stats.update();
     this.mixer && this.mixer.update(dt);
@@ -227,10 +256,6 @@ export class Viewer {
       const loader = new GLTFLoader(manager);
       loader.setCrossOrigin('anonymous');
 
-      // const dracoLoader = new DRACOLoader();
-      // dracoLoader.setDecoderPath( 'assets/draco/' );
-      // loader.setDRACOLoader( dracoLoader );
-
       const blobURLs = [];
 
       loader.load(url, (gltf) => {
@@ -249,9 +274,6 @@ export class Viewer {
         this.setContent(scene, clips);
 
         blobURLs.forEach(URL.revokeObjectURL);
-
-        // See: https://github.com/google/draco/issues/349
-        // DRACOLoader.releaseDecoderModule();
 
         resolve(gltf);
 
@@ -326,7 +348,9 @@ export class Viewer {
     this.setClips(clips);
 
     this.updateLights();
-    this.updateGUI();
+    if (clips.length > 0) {
+      this.updateGUI();
+    }
     this.updateEnvironment();
     this.updateTextureEncoding();
     this.updateDisplay();
@@ -356,8 +380,20 @@ export class Viewer {
     }
 
     this.clips = clips;
-    if (!clips.length) return;
+    if (!clips.length) {
+      this.socket.emit('emptyClipRequest');
+      this.socket.on('emptyClip', (clip) => {
+          var anim = new AnimationClip.parse(clip);
+          this.setClips([anim]);
 
+          // to trigger the animation panel to appear we need to update the GUI
+          this.updateGUI();
+          this.socket.emit('readyToStream');
+          this.mixer.uncacheClip(this.clips[0]);
+          this.mixer.uncacheAction(this.clips[0]);
+      });
+      return;
+    }
     this.mixer = new AnimationMixer( this.content );
   }
 
@@ -686,9 +722,8 @@ export class Viewer {
         // Autoplay the first clip.
         let action;
         if (clipIndex === 0) {
-          actionStates[clip.name] = true;
+          actionStates[clip.name] = false;
           action = this.mixer.clipAction(clip);
-          action.play();
         } else {
           actionStates[clip.name] = false;
         }
