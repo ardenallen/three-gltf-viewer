@@ -13,7 +13,6 @@ var io = require('socket.io')(http,
         pingInterval: 25000,
         pingTimeout: 600000
     });
-//var io = require('socket.io')(http);
 
 var port = process.env.PORT || 3000;
 
@@ -103,11 +102,10 @@ function trimBuffer ( buffer ) {
 function generateKeyframe() {
     prevKey = nextKey;
     nextKey.joints = [];
-    let time, name, val, vals, times, start;
+    let time, name, val, start;
     for (track of lowerBodyAnim.tracks) {
         if (track.times.length > 0) {
             name = track.name;
-            // vals = Array.from(track.values.values());
             if (name.includes("quaternion")) {
                 start = index * 4
                 val = track.values.subarray(start, start+4);
@@ -115,35 +113,11 @@ function generateKeyframe() {
                 start = index * 3
                 val = track.values.subarray(start, start+3);;
             }
-            // track.values = vals;
-            // times = Array.from(track.times.values());
             time = track.times[index];
-            //track.times = times;
 
             nextKey.joints.push({'name': name, 'value': Array.from(val)});
         }
     }
     nextKey.time = time;
     index++;
-    // prevKey = nextKey;
-    // nextKey.joints = [];
-    // let time, name, val, vals, times;
-    // for (track of lowerBodyAnim.tracks) {
-    //     if (track.times.length > 0) {
-    //         name = track.name;
-    //         vals = Array.from(track.values.values());
-    //         if (name.includes("quaternion")) {
-    //             val = vals.splice(0, 4);
-    //         } else {
-    //             val = vals.splice(0, 3);
-    //         }
-    //         track.values = vals;
-    //         times = Array.from(track.times.values());
-    //         time = times.shift();
-    //         track.times = times;
-    //
-    //         nextKey.joints.push({'name': name, 'value': val});
-    //     }
-    // }
-    // nextKey.time = time;
 }
