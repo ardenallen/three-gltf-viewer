@@ -118,11 +118,32 @@ function generateKeyframe() {
             // track.values = vals;
             // times = Array.from(track.times.values());
             time = track.times[index];
-            // track.times = times;
+            //track.times = times;
 
-            nextKey.joints.push({'name': name, 'value': val});
+            nextKey.joints.push({'name': name, 'value': Array.from(val)});
         }
     }
     nextKey.time = time;
     index++;
+    // prevKey = nextKey;
+    // nextKey.joints = [];
+    // let time, name, val, vals, times;
+    // for (track of lowerBodyAnim.tracks) {
+    //     if (track.times.length > 0) {
+    //         name = track.name;
+    //         vals = Array.from(track.values.values());
+    //         if (name.includes("quaternion")) {
+    //             val = vals.splice(0, 4);
+    //         } else {
+    //             val = vals.splice(0, 3);
+    //         }
+    //         track.values = vals;
+    //         times = Array.from(track.times.values());
+    //         time = times.shift();
+    //         track.times = times;
+    //
+    //         nextKey.joints.push({'name': name, 'value': val});
+    //     }
+    // }
+    // nextKey.time = time;
 }
