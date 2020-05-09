@@ -7,7 +7,6 @@
   "scripts": {
     "start": "node index.js",
     "prestart": "parcel build index.html",
-    "dev": "parcel index.html --port 3000",
     "test": "node scripts/gen_test.js"
   },
   "keywords": [

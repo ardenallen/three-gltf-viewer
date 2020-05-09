@@ -101,7 +101,7 @@ function generateKeyframe() {
     prevKey = nextKey;
     nextKey.joints = [];
     let time, name, val, start;
-    for (track of fullBodyAnim.tracks) {
+    for (track of lowerBodyAnim.tracks) {
         if (track.times.length > 0) {
             name = track.name;
             if (name.includes("quaternion")) {

@@ -2,8 +2,6 @@
 
 Preview glTF 2.0 models in WebGL using three.js and a drag-and-drop interface.
 
-* Web (https://gltf-viewer.donmccurdy.com/)
-* Desktop apps for Windows, MacOS, and Linux ([download](https://github.com/donmccurdy/three-gltf-viewer/releases))
 
 ![screenshot](https://user-images.githubusercontent.com/1848368/31580352-b7354096-b101-11e7-86d7-f07677835812.png)
 
@@ -13,20 +11,9 @@ Preview glTF 2.0 models in WebGL using three.js and a drag-and-drop interface.
 
 ```
 npm install
-npm run dev
+npm start
 ```
 
-### Desktop (Electron)
-
-To build the desktop application, run:
-
-```shell
-# development build
-npm run dev:electron
-
-# package for release
-npm run package
-```
 
 ## glTF 2.0 Resources
 
