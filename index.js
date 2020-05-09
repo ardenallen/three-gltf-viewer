@@ -26,7 +26,6 @@ const fullBody = fs.readFileSync( '../HumanSkeleton/SkeletalRig_v1_5_animated.gl
 const lowerBody = fs.readFileSync( '../HumanSkeleton/SkeletalRig_v1_5_run_constraint.gltf' );
 let fullBodyAnim;
 let emptyClip;
-let lowerBodyAnim_read;
 let lowerBodyAnim;
 var prevKey = {'time': null, 'joints':[]};
 let nextKey = {'time': null, 'joints':[]};
@@ -50,7 +49,7 @@ loader.parse( trimBuffer( fullBody ), '', ( gltf ) => {
 
 loader.parse( trimBuffer( lowerBody ), '', ( gltf ) => {
 
-    lowerBodyAnim_read = gltf.animations[0];
+    lowerBodyAnim = gltf.animations[0];
 
 }, ( e ) => {
 
@@ -66,13 +65,12 @@ io.on('connection', (socket) => {
     socket.on('readyToStream', () => {
         console.log("READY");
         index = 0;
-        lowerBodyAnim = fullBodyAnim.clone();
         setInterval(() => {
            if (prevKey.time != null) {
                 socket.emit('keyframe', prevKey);
             }
             generateKeyframe();}
-            , 10);
+            , 20);
     });
     socket.on('disconnect', (reason) => {
         console.log('user disconnected');
@@ -103,7 +101,7 @@ function generateKeyframe() {
     prevKey = nextKey;
     nextKey.joints = [];
     let time, name, val, start;
-    for (track of lowerBodyAnim.tracks) {
+    for (track of fullBodyAnim.tracks) {
         if (track.times.length > 0) {
             name = track.name;
             if (name.includes("quaternion")) {

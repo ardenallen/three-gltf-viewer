@@ -736,7 +736,7 @@ export class Viewer {
         // Autoplay the first clip.
         let action;
         if (clipIndex === 0) {
-          actionStates[clip.name] = false;
+          actionStates[clip.name] = true;
           action = this.mixer.clipAction(clip);
         } else {
           actionStates[clip.name] = false;
