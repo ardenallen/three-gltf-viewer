@@ -20,7 +20,7 @@ class App {
    */
   constructor (el, location) {
 
-    this.socket = io();
+    this.socket = io( {transports: ['websocket']});
     const hash = location.hash ? queryString.parse(location.hash) : {};
     this.options = {
       kiosk: Boolean(hash.kiosk),

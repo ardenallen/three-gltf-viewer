@@ -8,8 +8,10 @@ var app = express();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http,
     {
+        transports: ['websocket'],
+        allowUpgrades: false,
         pingInterval: 25000,
-        pingTimeout: 60000
+        pingTimeout: 600000
     });
 //var io = require('socket.io')(http);
 
@@ -29,6 +31,7 @@ let lowerBodyAnim_read;
 let lowerBodyAnim;
 var prevKey = {'time': null, 'joints':[]};
 let nextKey = {'time': null, 'joints':[]};
+let index = 0;
 
 loader.parse( trimBuffer( fullBody ), '', ( gltf ) => {
 
@@ -49,7 +52,6 @@ loader.parse( trimBuffer( fullBody ), '', ( gltf ) => {
 loader.parse( trimBuffer( lowerBody ), '', ( gltf ) => {
 
     lowerBodyAnim_read = gltf.animations[0];
-    //console.log(lowerBodyAnim_read);
 
 }, ( e ) => {
 
@@ -64,9 +66,10 @@ io.on('connection', (socket) => {
     });
     socket.on('readyToStream', () => {
         console.log("READY");
+        index = 0;
         lowerBodyAnim = fullBodyAnim.clone();
         setInterval(() => {
-            if (prevKey.time != null) {
+           if (prevKey.time != null) {
                 socket.emit('keyframe', prevKey);
             }
             generateKeyframe();}
@@ -100,23 +103,26 @@ function trimBuffer ( buffer ) {
 function generateKeyframe() {
     prevKey = nextKey;
     nextKey.joints = [];
-    let time, name, val, vals, times;
+    let time, name, val, vals, times, start;
     for (track of lowerBodyAnim.tracks) {
         if (track.times.length > 0) {
             name = track.name;
-            vals = Array.from(track.values.values());
+            // vals = Array.from(track.values.values());
             if (name.includes("quaternion")) {
-                val = vals.splice(0, 4);
+                start = index * 4
+                val = track.values.subarray(start, start+4);
             } else {
-                val = vals.splice(0, 3);
+                start = index * 3
+                val = track.values.subarray(start, start+3);;
             }
-            track.values = vals;
-            times = Array.from(track.times.values());
-            time = times.shift();
-            track.times = times;
+            // track.values = vals;
+            // times = Array.from(track.times.values());
+            time = track.times[index];
+            // track.times = times;
 
             nextKey.joints.push({'name': name, 'value': val});
         }
     }
     nextKey.time = time;
+    index++;
 }

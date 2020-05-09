@@ -184,7 +184,6 @@ export class Viewer {
       action.paused = paused;
       action.play();
     }
-
   }
 
   animate (time) {
