@@ -1,6 +1,7 @@
 global.atob = require("atob");
 const fs = require('fs');
 var THREE = global.THREE = require('three');
+var glMatrix = require('gl-matrix');
 require('three/examples/js/loaders/GLTFLoader.js');
 var express = require('express');
 var path = require('path');
@@ -34,6 +35,7 @@ let index = 0;
 loader.parse( trimBuffer( fullBody ), '', ( gltf ) => {
 
     fullBodyAnim = gltf.animations[0];
+    console.log(fullBodyAnim.tracks[0].times.length);
     emptyClip = fullBodyAnim.clone();
     for (track of emptyClip.tracks) {
         track.times = [0];
@@ -117,5 +119,41 @@ function generateKeyframe() {
         }
     }
     nextKey.time = time;
+    findUpperBody();
     index++;
+}
+
+function findUpperBody() {
+    let diff, minDiff;
+    var minIndex = 1000;
+    var lowerQuat = glMatrix.vec4.create();
+    var fullQuat = glMatrix.vec4.create();
+    var joints = {};
+    for (jnt of nextKey.joints) {
+        if (!jnt.name.includes("position"))
+            joints[jnt.name] = jnt.value;
+    }
+    for (i = 1000; i < 1100; i++) {
+        diff = 0;
+        for (track of fullBodyAnim.tracks) {
+            var joint = joints[track.name];
+            if (joint === undefined)
+                continue;
+            lowerQuat.set(joint);
+            fullQuat.set(track.values.subarray(i, i+4));
+            diff += glMatrix.vec4.squaredDistance(lowerQuat, fullQuat)
+        }
+        if (i == 1000)
+            minDiff = diff;
+        else if (diff < minDiff) {
+            minDiff = diff;
+            minIndex = i;
+        }
+    }
+    var start = minIndex * 4;
+    for (track of fullBodyAnim.tracks) {
+        if(joints[track.name] !== undefined)
+            continue;
+        nextKey.joints.push({'name': track.name, 'value': Array.from(track.values.subarray(start, start+4))})
+    }
 }
